@@ -1,6 +1,7 @@
 import 'package:awesome_app/widgets/drawer.dart';
-import 'package:awesome_app/widgets/nameCard.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class HomePage extends StatefulWidget {
   @override
@@ -8,8 +9,24 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  var myName = 'You Name ?';
-  TextEditingController _textEditingController = TextEditingController();
+  // var myName = 'You Name ?';
+  // TextEditingController _textEditingController = TextEditingController();
+
+  var url = 'https://jsonplaceholder.typicode.com/photos';
+  var data;
+
+  @override
+  void initState() {
+    fetchData();
+    super.initState();
+  }
+
+  Future<void> fetchData() async {
+    var res = await http.get(url);
+    setState(() {
+      data = jsonDecode(res.body);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,20 +35,25 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text('Awesome App'),
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: NameChangeCard(
-                myName: myName, textEditingController: _textEditingController),
-          ),
-        ),
-      ),
+      body: data != null
+          ? ListView.builder(
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(data[index]['title']),
+                  subtitle: Text('ID: ${data[index]['id']}'),
+                  leading: Image.network(data[index]['url']),
+                );
+              },
+              itemCount: data.length,
+            )
+          : Center(
+              child: CircularProgressIndicator(),
+            ),
       drawer: MyDrawer(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            myName = _textEditingController.value.text;
+            // myName = _textEditingController.value.text;
           });
         },
         child: Icon(Icons.send),
